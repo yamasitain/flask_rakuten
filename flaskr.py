@@ -6,9 +6,9 @@ from datetime import date
 DATABASE = '/tmp/ritem.db'
 DEBUG = True
 
-APPLICATIONID = 'xxxxxx'
-APPSECRET   = 'xxxxx'
-AFFILIATEID = 'xxxxx'
+APPLICATIONID = ''
+APPSECRET   = ''
+AFFILIATEID = ''
 
 SECRET_KEY  = 'development key'
 USERNAME    = 'admin'
@@ -41,23 +41,38 @@ def add_entry():
     ]
     uri = host + "&".join(req)
     res = json.load(urllib2.urlopen(uri))
-#    res = json.load(urllib2.urlopen("https://app.rakuten.co.jp/services/api/IchibaItem/Search/20130805?format=json&keyword=test&applicationId=107a31b9eb9988703189fea16cdf1bcc"))
-#    items = res["Body"]["ItemSearch"]["Items"]["Item"]
     items = res['Items']
 
     for item in items :
         if item['Item']['availability'] == 1 :
             g.db.execute('insert into ritem (name, catch, code, url, imgurl, shopcode, genreid, date) values (?, ?, ?, ?, ?, ?, ?, ?)',
-                [item['Item']['itemName'], item['Item']['catchcopy'], item['Item']['itemCode'], item['Item']['affiliateUrl'], item['Item']['mediumImageUrls'][0]['imageUrl'], item['Item']['shopCode'], item['Item']['genreId'], date.today()])
+                [item['Item']['itemName'], 
+                item['Item']['catchcopy'], 
+                item['Item']['itemCode'], 
+                item['Item']['affiliateUrl'], 
+                item['Item']['mediumImageUrls'][0]['imageUrl'], 
+                item['Item']['shopCode'], 
+                item['Item']['genreId'], 
+                date.today()])
             g.db.commit()
         
         g.db.execute('insert into rshop (itemcode, shopcode, shopname, shopurl, genreid, date) values (?, ?, ?, ?, ?, ?)',
-            [item['Item']['itemCode'], item['Item']['shopCode'], item['Item']['shopName'], item['Item']['shopUrl'], item['Item']['genreId'], date.today()])
+            [item['Item']['itemCode'], 
+            item['Item']['shopCode'], 
+            item['Item']['shopName'], 
+            item['Item']['shopUrl'], 
+            item['Item']['genreId'], 
+            date.today()])
         g.db.commit()
 
         for imageUrl in item['Item']['mediumImageUrls'] :
             g.db.execute('insert into rwindow (itemcode, shopcode, genreid, itemurl, imgurl, date) values (?, ?, ?, ?, ?, ?)',
-                [item['Item']['itemCode'], item['Item']['shopCode'],  item['Item']['genreId'], item['Item']['affiliateUrl'], imageUrl['imageUrl'], date.today()])
+                [item['Item']['itemCode'], 
+                item['Item']['shopCode'], 
+                item['Item']['genreId'],
+                item['Item']['affiliateUrl'],
+                imageUrl['imageUrl'],
+                date.today()])
             g.db.commit()
     flash('New entry was successfully posted')
     return redirect(url_for('show_entries'))

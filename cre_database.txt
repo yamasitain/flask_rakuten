@@ -1,0 +1,1 @@
+sqlite3 /tmp/ritem.db < schema.sql
